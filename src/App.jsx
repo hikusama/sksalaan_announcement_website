@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import logo from './assets/logo.png'
+import guide from './assets/guide.png'
 import './App.css'
 import { supabase } from "./supabaseClient";
 
@@ -14,6 +15,7 @@ function App() {
   const [totalRows, setTotalRows] = useState(0)
   const [position, setPosition] = useState(1)
   const [data, setData] = useState([])
+  const [showGuideModal, setShowGuideModal] = useState(false)
 
   useEffect(() => {
     const sections = [fpRef.current, spRef.current];
@@ -98,7 +100,7 @@ function App() {
       <main className='text-[#ffffffb6]'>
         <div id="content" className='relative'>
           <div className="bgsc overflow-y-scroll snap-y snap-mandatory">
-            <div ref={fpRef} className="fp snap-start opacity-0 transition-all duration-700">
+            <div ref={fpRef} className="fp snap-start opacity-0 transition-all duration-700 relative">
               <div className="lgu">
                 <div className="logoG"><img src={logo} alt="" /></div>
                 <ol><li>SKYouth Announcement</li><li className='ls'>Salaan</li></ol>
@@ -107,8 +109,8 @@ function App() {
               <div className='bt4 flex flex-col items-start justify-center'>
                 <div className="fw h-fit !pb-[6rem]">
                   <h4><span>🎉Welcome</span> to the official announcement page for the youth of Barangay Salaan.</h4>
-                  <button onClick={goToNext} className='cursor-pointer flex items-center gap-[.5rem] !py-[.4rem] !px-[1rem] rounded-[1rem]'>
-                    <p>See latest update</p>
+                  <button onClick={() => setShowGuideModal(true)} className='cursor-pointer flex items-center gap-[.5rem] !py-[.4rem] !px-[1rem] rounded-[1rem]'>
+                    <p>Register</p>
                     <div className='h-[1.7rem] w-[1.7rem] rounded-full flex flex-col justify-center'>
                       <i className="fas fa-arrow-right"></i>
                     </div>
@@ -122,12 +124,16 @@ function App() {
                   <h4 className='font-bold text-center !mt-[1rem]'>Updates for the Youths of salaan</h4>
                 </div>
               </div>
+              <button onClick={goToNext} className='absolute bottom-8 left-1/2 transform -translate-x-1/2 cursor-pointer flex flex-col items-center gap-2 text-black'>
+                <p className='text-[.9rem]'>Scroll down</p>
+                <i className="fas fa-chevron-down text-[1.5rem] animate-bounce"></i>
+              </button>
             </div>
 
             <div className="bt4new">
               <h4><span>🎉Welcome</span> to the official announcement page for the youth of Barangay Salaan.</h4>
-              <button onClick={goToNext} className='cursor-pointer flex items-center gap-[.5rem] !py-[.4rem] !px-[1rem] rounded-[1rem]'>
-                <p>See latest update</p>
+              <button onClick={() => setShowGuideModal(true)} className='cursor-pointer flex items-center gap-[.5rem] !py-[.4rem] !px-[1rem] rounded-[1rem]'>
+                <p>Register</p>
                 <div className='h-[1.7rem] w-[1.7rem] rounded-full flex flex-col justify-center'>
                   <i className="fas fa-arrow-right"></i>
                 </div>
@@ -233,6 +239,19 @@ function App() {
             </div>
           </div>
         </div>
+        {showGuideModal && (
+          <div className='fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4'>
+            <div className='relative max-w-2xl w-full max-h-[90vh] bg-[#0c1117] rounded-lg overflow-auto'>
+              <button 
+                onClick={() => setShowGuideModal(false)}
+                className='absolute top-4 right-4 text-white text-2xl hover:text-gray-400 z-10'
+              >
+                <i className="fas fa-times"></i>
+              </button>
+              <img src={guide} alt="Registration Guide" className='w-full h-auto' />
+            </div>
+          </div>
+        )}
       </main>
     </>
   )
