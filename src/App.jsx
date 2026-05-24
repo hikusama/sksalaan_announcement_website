@@ -1,262 +1,306 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import logo from './assets/logo.png'
 import guide from './assets/guide.png'
 import './App.css'
 import { supabase } from "./supabaseClient";
 
-function App() {
-  const fpRef = useRef(null);
-  const spRef = useRef(null);
-  const containerRef = useRef(null);
-  const loadingRef = useRef(false) // lock for fetch
-  const pageRef = useRef(1)       // current page tracker
+const PAGE_SIZE = 5
 
-  const [isLoad, setLoad] = useState(false)
-  const [totalRows, setTotalRows] = useState(0)
-  const [position, setPosition] = useState(1)
-  const [data, setData] = useState([])
-  const [showGuideModal, setShowGuideModal] = useState(false)
+function AnnouncementCard({ card, style }) {
+  const formatDate = (iso) =>
+    iso
+      ? new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      : '—'
 
-  useEffect(() => {
-    const sections = [fpRef.current, spRef.current];
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) entry.target.classList.add("animate-fade-in");
-          else entry.target.classList.remove("animate-fade-in");
-        });
-      },
-      { threshold: 0.5 }
-    );
-    sections.forEach(sec => sec && observer.observe(sec));
-    return () => sections.forEach(sec => sec && observer.unobserve(sec));
-  }, []);
-
-  const goToNext = () => spRef.current.scrollIntoView({ behavior: "smooth" });
-
-  const scrollNext = () => {
-    if (!containerRef.current) return;
-    if (position === data.length + 1) return;
-    setPosition(prev => prev + 1)
-    const childWidth = containerRef.current.firstChild.offsetWidth;
-    containerRef.current.scrollBy({ left: childWidth, behavior: "smooth" });
+  const formatDateTime = (iso) => {
+    if (!iso) return '—'
+    return new Date(iso).toLocaleString('en-US', {
+      month: 'short', day: 'numeric', year: 'numeric',
+      hour: 'numeric', minute: '2-digit', hour12: true,
+    })
   }
-
-  const scrollPrev = () => {
-    if (!containerRef.current) return;
-    if (position === 1) return;
-    setPosition(prev => prev - 1)
-    const childWidth = containerRef.current.firstChild.offsetWidth;
-    containerRef.current.scrollBy({ left: -childWidth, behavior: "smooth" });
-  }
-
-  async function fetchAnnouncements(page = 1, pageSize = 1) {
-    if (loadingRef.current) return { data: [], total: 0 };
-    loadingRef.current = true;
-    setLoad(true);
-
-    const from = (page - 1) * pageSize;
-    const to = from + pageSize - 1;
-
-    try {
-      const { count: total, error: countError } = await supabase
-        .from("announcements")
-        .select("*", { count: "exact", head: true });
-
-      if (countError) throw new Error(`Count query failed: ${countError.message}`);
-
-      const { data: fetchedData, error } = await supabase
-        .from("announcements")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .range(from, to);
-
-      if (error) throw new Error(`Data query failed: ${error.message}`);
-
-      return { data: fetchedData || [], total: total || 0 };
-    } catch (err) {
-      console.error("Fetch announcements error:", err.message);
-      return { data: [], total: 0 };
-    } finally {
-      loadingRef.current = false;
-      setLoad(false);
-    }
-  }
-
-  const load = async (page = 1) => {
-    const d = await fetchAnnouncements(page);
-    setTotalRows(d.total);
-
-    if (page > 1) setData(prev => [...prev, ...d.data]);
-    else setData(d.data);
-    setPosition(1)
-    pageRef.current = page; // update page tracker
-  }
-
-  useEffect(() => { load(1); }, []);
-  useEffect(() => { console.log(position) }, [position]);
 
   return (
-    <>
-      <header>{/*  */}</header>
-      <main className='text-[#ffffffb6]'>
-        <div id="content" className='relative'>
-          <div className="bgsc overflow-y-scroll snap-y snap-mandatory">
-            <div ref={fpRef} className="fp snap-start opacity-0 transition-all duration-700 relative">
-              <div className="lgu">
-                <div className="logoG"><img src={logo} alt="" /></div>
-                <ol><li>SKYouth Announcement</li><li className='ls'>Salaan</li></ol>
-              </div>
-              <div className='wth'></div>
-              <div className='bt4 flex flex-col items-start justify-center'>
-                <div className="fw h-fit !pb-[6rem]">
-                  <h4><span>🎉Welcome</span> to the official announcement page for the youth of Barangay Salaan.</h4>
-                  <button onClick={() => setShowGuideModal(true)} className='cursor-pointer flex items-center gap-[.5rem] !py-[.4rem] !px-[1rem] rounded-[1rem]'>
-                    <p>Register</p>
-                    <div className='h-[1.7rem] w-[1.7rem] rounded-full flex flex-col justify-center'>
-                      <i className="fas fa-arrow-right"></i>
-                    </div>
-                  </button>
-                  <p className='pmmm !mt-[2rem] text-[#c0c0c0d8]'>Stay updated with events, opportunities, and important notices from your SK Council.</p>
-                </div>
-              </div>
-              <div className="backtr relative">
-                <div className="lkd h-[10rem]">
-                  <img src={logo} className='h-[10rem]' />
-                  <h4 className='font-bold text-center !mt-[1rem]'>Updates for the Youths of salaan</h4>
-                </div>
-              </div>
-              <button onClick={goToNext} className='absolute bottom-8 left-1/2 transform -translate-x-1/2 cursor-pointer flex flex-col items-center gap-2 text-black'>
-                <p className='text-[.9rem]'>Scroll down</p>
-                <i className="fas fa-chevron-down text-[1.5rem] animate-bounce"></i>
-              </button>
-            </div>
-
-            <div className="bt4new">
-              <h4><span>🎉Welcome</span> to the official announcement page for the youth of Barangay Salaan.</h4>
-              <button onClick={() => setShowGuideModal(true)} className='cursor-pointer flex items-center gap-[.5rem] !py-[.4rem] !px-[1rem] rounded-[1rem]'>
-                <p>Register</p>
-                <div className='h-[1.7rem] w-[1.7rem] rounded-full flex flex-col justify-center'>
-                  <i className="fas fa-arrow-right"></i>
-                </div>
-              </button>
-              <div className='w-full flex justify-center'>
-                <p className='pmmm !mt-[2rem] text-[#c0c0c0d8]'>Stay updated with events, opportunities, and important notices from your SK Council.</p>
-              </div>
-            </div>
-
-            <div ref={spRef} className="sp snap-start opacity-0 transition-all duration-700 grid grid-rows-[auto_minmax(0,1fr)]">
-              <h4 className='font-bold text-[1.5rem] !p-[4rem_0_7rem_0] w-full text-center'>Announcement🎉</h4>
-              <div className="flex justify-center h-full items-start">
-                <div className="relative w-fit">
-                  <button onClick={scrollPrev} className='agile1'><i className="fas fa-angle-left"></i></button>
-                  <div ref={containerRef} className="annn overflow-x-scroll flex ">
-                    {isLoad ?
-                      <div className="h-[15rem] w-full flex justify-center items-center">
-                        <p className='text-center !mt-[1rem] text-[.9rem]'><i className="fas fa-spinner fa-spin"></i> Fetching data..</p>
-                      </div> :
-                      data.length === 0 ?
-                        <div className="h-[15rem] w-full flex justify-center items-center">
-                          <p className='text-center !mt-[1rem]'>No announcement.</p>
-                        </div> :
-                        data.map((card, ind) => (
-                          <>
-                            <ul key={card.id} className='relative'>
-                              <div className="absolute left-[.5rem] top-[.5rem]">
-                                <img src={logo} className='h-[2.5rem]' alt="" />
-                              </div>
-                              <li className='flex justify-end items-end flex-col'>
-                                <p className='!text-[.9rem]'>
-                                  {card.created_at ? new Date(card.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '------'}
-                                </p>
-                                <p className='!text-[.9rem]'>Posted</p>
-                              </li>
-                              <li className='!mt-[.7rem]'>
-                                <p>What</p>
-                                <p>{card.what}</p>
-                              </li>
-                              <li className='!mt-[.7rem]'>
-                                <p>When</p>
-                                <p>
-                                  {
-                                    (new Date(card.when).toLocaleString('en-US', {
-                                      month: 'long',
-                                      day: 'numeric',
-                                      year: 'numeric',
-                                      hour: 'numeric',
-                                      minute: '2-digit',
-                                      hour12: true
-                                    }).replace(',', ''))
-                                  }
-                                </p>
-                              </li>
-                              <li className='!mt-[.7rem]'>
-                                <p>Where</p>
-                                <p>{card.where}</p>
-                              </li>
-                              <br />
-                              <hr />
-                              <li className='!py-[.5rem]'>
-                                <p>Who</p>
-                                <p>{card.who}</p>
-                              </li>
-                              <hr />
-                              <li className='!py-[.5rem]'>
-                                <p>Description</p>
-                                <p>{card.description}</p>
-                              </li>
-                              <hr />
-
-                            </ul>
-                            {ind === data.length - 1 &&
-                              (totalRows === data.length ? (
-                                <ul className='lstt flex items-center justify-center'>
-                                  <div>
-                                    <div>All caught <i className="fas fa-thumbs-up"></i></div>
-                                  </div>
-                                </ul>
-                              ) : (
-                                <ul className='lstt flex items-center justify-center'>
-                                  <div>
-                                    <button className='!p-[.5rem_1.2rem]' onClick={() => load(pageRef.current + 1)}>Load more <i className="fas fa-arrow-right"></i></button>
-                                  </div>
-                                </ul>
-                              ))
-                            }
-                          </>
-                        ))
-                    }
-                  </div>
-
-                  <div className="flex justify-center gap-2 !mt-4 ">
-                    {data.map((_, i) => (
-                      <span key={i} className={`w-2 h-2 ${position - 1 === i ? 'bg-[#bdbdbd]' : ''} border-1 border-[#ffffff48] rounded-full`}></span>
-                    ))}
-                    {data.length === 0 ? '' : <span className={`w-2 h-2 ${position === data.length + 1 ? 'bg-[#bdbdbd]' : ''} border-1 border-[#ffffff48] rounded-full`}></span>}
-                  </div>
-                  <button onClick={scrollNext} className='agile2'><i className="fas fa-angle-right"></i></button>
-
-                </div>
-              </div>
-            </div>
-          </div>
+    <article className="ann-card" style={style}>
+      <div className="card-top">
+        <img src={logo} alt="SK Logo" className="card-logo" />
+        <div className="card-date">
+          <div className="date-val">{formatDate(card.created_at)}</div>
+          <div className="date-label">Posted</div>
         </div>
-        {showGuideModal && (
-          <div className='fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4'>
-            <div className='relative max-w-2xl w-full max-h-[90vh] bg-[#0c1117] rounded-lg overflow-auto'>
-              <button 
-                onClick={() => setShowGuideModal(false)}
-                className='absolute top-4 right-4 text-white text-2xl hover:text-gray-400 z-10'
-              >
-                <i className="fas fa-times"></i>
-              </button>
-              <img src={guide} alt="Registration Guide" className='w-full h-auto' />
-            </div>
-          </div>
-        )}
-      </main>
-    </>
+      </div>
+
+      <div className="card-field">
+        <div className="field-label">What</div>
+        <div className="field-value">{card.what}</div>
+      </div>
+
+      <div className="card-field">
+        <div className="field-label">When</div>
+        <div className="field-value">{formatDateTime(card.when)}</div>
+      </div>
+
+      <div className="card-field">
+        <div className="field-label">Where</div>
+        <div className="field-value">{card.where}</div>
+      </div>
+
+      <hr className="card-divider" />
+
+      <div className="card-field">
+        <div className="field-label">Who</div>
+        <div className="field-value">{card.who}</div>
+      </div>
+
+      <hr className="card-divider" />
+
+      <div className="card-field">
+        <div className="field-label">Description</div>
+        <div className="field-value">{card.description}</div>
+      </div>
+    </article>
   )
 }
 
-export default App
+export default function App() {
+  const spRef          = useRef(null)
+  const trackRef       = useRef(null)   // the .annn scroll container
+  const loadingRef     = useRef(false)
+  const pageRef        = useRef(1)
+
+  const [isLoad,     setLoad]     = useState(false)
+  const [totalRows,  setTotal]    = useState(0)
+  const [data,       setData]     = useState([])
+  const [activeIdx,  setActive]   = useState(0)   // 0-based card index in view
+  const [showModal,  setModal]    = useState(false)
+
+  /* ── fetch ─────────────────────────────────── */
+  const fetchAnnouncements = useCallback(async (page = 1) => {
+    if (loadingRef.current) return
+    loadingRef.current = true
+    setLoad(true)
+
+    const from = (page - 1) * PAGE_SIZE
+    const to   = from + PAGE_SIZE - 1
+
+    try {
+      const [{ count }, { data: rows, error }] = await Promise.all([
+        supabase.from('announcements').select('*', { count: 'exact', head: true }),
+        supabase.from('announcements').select('*').order('created_at', { ascending: false }).range(from, to),
+      ])
+      if (error) throw error
+
+      setTotal(count ?? 0)
+      setData(prev => page === 1 ? (rows ?? []) : [...prev, ...(rows ?? [])])
+      pageRef.current = page
+    } catch (err) {
+      console.error('fetchAnnouncements:', err.message)
+    } finally {
+      loadingRef.current = false
+      setLoad(false)
+    }
+  }, [])
+
+  useEffect(() => { fetchAnnouncements(1) }, [fetchAnnouncements])
+
+  /* ── track scroll position for dots / arrow state ── */
+  useEffect(() => {
+    const el = trackRef.current
+    if (!el) return
+
+    const onScroll = () => {
+      const cardW = el.firstChild?.offsetWidth ?? 1
+      const idx   = Math.round(el.scrollLeft / (cardW + 20)) // 20 = gap
+      setActive(idx)
+    }
+
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => el.removeEventListener('scroll', onScroll)
+  }, [data])
+
+  /* ── carousel nav ─────────────────────────────── */
+  const scrollTo = (idx) => {
+    const el = trackRef.current
+    if (!el) return
+    const cardW = el.firstChild?.offsetWidth ?? 0
+    el.scrollTo({ left: idx * (cardW + 20), behavior: 'smooth' })
+    setActive(idx)
+  }
+
+  const totalCards = data.length + (data.length > 0 ? 1 : 0) // cards + load-more/all-done
+  const atStart    = activeIdx === 0
+  const atEnd      = activeIdx >= totalCards - 1
+
+  return (
+    <>
+      <main>
+        <div id="content">
+          <div className="page-scroll">
+
+            {/* ── HERO ─────────────────────────────── */}
+            <section className="fp">
+              <div className="hero-left">
+                <div className="lgu">
+                  <div className="logoG"><img src={logo} alt="SK Youth Logo" /></div>
+                  <div className="lgu-text">
+                    <div className="name">SKYouth Announcement</div>
+                    <div className="loc">Salaan</div>
+                  </div>
+                </div>
+
+                <div className="hero-tag">Official Announcements</div>
+
+                <h1 className="hero-title">
+                  Updates for the<br />
+                  <span className="accent">Youth of Salaan</span>
+                </h1>
+
+                <p className="hero-desc">
+                  Stay informed with events, opportunities, and important notices
+                  from your SK Council — all in one place.
+                </p>
+
+                <button className="btn-primary" onClick={() => setModal(true)}>
+                  <span>Register Now</span>
+                  <span className="arrow-wrap">
+                    <i className="fas fa-arrow-right" style={{ fontSize: '0.75rem' }}></i>
+                  </span>
+                </button>
+              </div>
+
+              {/* Right visual */}
+              <div className="hero-right">
+                <div className="hero-visual">
+                  <div className="ring ring-3" />
+                  <div className="ring ring-2" />
+                  <div className="ring ring-1" />
+                  <div className="hero-logo-wrap">
+                    <img src={logo} alt="" />
+                  </div>
+                  <div className="hero-badge">📢 Latest Updates</div>
+                </div>
+              </div>
+
+              <button
+                className="scroll-cta"
+                onClick={() => spRef.current?.scrollIntoView({ behavior: 'smooth' })}
+              >
+                <span>See Announcements</span>
+                <i className="fas fa-chevron-down"></i>
+              </button>
+            </section>
+
+            {/* ── ANNOUNCEMENTS ─────────────────────── */}
+            <section ref={spRef} className="sp">
+              <div className="sp-header">
+                <h2 className="sp-title">
+                  📢 <span>Announcements</span>
+                </h2>
+                {totalRows > 0 && (
+                  <span className="sp-count">{data.length} of {totalRows}</span>
+                )}
+              </div>
+
+              <div className="carousel-wrapper">
+                {/* Track */}
+                <div className="carousel-track-wrap">
+                  <div ref={trackRef} className="annn">
+                    {isLoad && data.length === 0 ? (
+                      <div className="state-card">
+                        <div className="spinner" />
+                        <span>Loading announcements…</span>
+                      </div>
+                    ) : data.length === 0 ? (
+                      <div className="state-card">
+                        <i className="fas fa-bell-slash" style={{ fontSize: '2rem', color: 'rgba(255,255,255,0.15)' }}></i>
+                        <span>No announcements yet. Check back soon!</span>
+                      </div>
+                    ) : (
+                      <>
+                        {data.map((card, i) => (
+                          <AnnouncementCard
+                            key={card.id}
+                            card={card}
+                            style={{ animationDelay: `${i * 0.05}s` }}
+                          />
+                        ))}
+
+                        {/* Load more / all done */}
+                        <div className="load-more-card">
+                          {totalRows === data.length ? (
+                            <div className="all-done">
+                              <i className="fas fa-check-circle"></i>
+                              <span>All caught up!</span>
+                            </div>
+                          ) : (
+                            <button
+                              className="btn-load-more"
+                              onClick={() => fetchAnnouncements(pageRef.current + 1)}
+                              disabled={isLoad}
+                            >
+                              {isLoad
+                                ? <><div className="spinner" style={{ width: '1rem', height: '1rem', borderWidth: '2px' }} /> Loading…</>
+                                : <><i className="fas fa-plus"></i> Load more</>}
+                            </button>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Footer: prev • dots • next */}
+                {data.length > 0 && (
+                  <div className="carousel-footer">
+                    <button
+                      className="nav-btn"
+                      onClick={() => scrollTo(activeIdx - 1)}
+                      disabled={atStart}
+                      aria-label="Previous"
+                    >
+                      <i className="fas fa-angle-left"></i>
+                    </button>
+
+                    <div className="dots">
+                      {Array.from({ length: totalCards }).map((_, i) => (
+                        <button
+                          key={i}
+                          className={`dot-item${activeIdx === i ? ' active' : ''}`}
+                          style={{ width: activeIdx === i ? undefined : '6px' }}
+                          onClick={() => scrollTo(i)}
+                          aria-label={`Go to card ${i + 1}`}
+                        />
+                      ))}
+                    </div>
+
+                    <button
+                      className="nav-btn"
+                      onClick={() => scrollTo(activeIdx + 1)}
+                      disabled={atEnd}
+                      aria-label="Next"
+                    >
+                      <i className="fas fa-angle-right"></i>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </section>
+
+          </div>{/* page-scroll */}
+        </div>
+      </main>
+
+      {/* ── GUIDE MODAL ──────────────────────────── */}
+      {showModal && (
+        <div className="modal-backdrop" onClick={() => setModal(false)}>
+          <div className="modal-box" onClick={e => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setModal(false)} aria-label="Close">
+              <i className="fas fa-times"></i>
+            </button>
+            <img src={guide} alt="Registration Guide" />
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
