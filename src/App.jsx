@@ -60,24 +60,49 @@ function AnnouncementCard({ card, style }) {
         <div className="field-label">Description</div>
         <div className="field-value" itemProp="articleBody">{card.description}</div>
       </div>
-      
+
       <meta itemProp="publisher" content="SKYouth Salaan" />
       <meta itemProp="url" content={`https://sksalaan-announcement-website.vercel.app/announcements/${card.id}`} />
     </article>
   )
 }
 
-export default function App() {
-  const spRef          = useRef(null)
-  const trackRef       = useRef(null)   // the .annn scroll container
-  const loadingRef     = useRef(false)
-  const pageRef        = useRef(1)
+/* ── Loading Screen ─────────────────────────── */
+function LoadingScreen({ fadeOut }) {
+  return (
+    <div className={`loader-screen${fadeOut ? ' fade-out' : ''}`} aria-label="Loading SKYouth">
+      <div className="loader-rings">
+        <div className="l-ring-glow" />
+        <div className="l-ring l-ring-1" />
+        <div className="l-ring l-ring-2" />
+        <div className="l-ring l-ring-3" />
+        <div className="loader-logo">
+          <img src={logo} alt="SK Youth Logo" />
+        </div>
+      </div>
+      <div className="loader-bottom">
+        <div className="loader-label">SKYouth · Salaan</div>
+        <div className="loader-dots">
+          <span /><span /><span />
+        </div>
+      </div>
+    </div>
+  )
+}
 
-  const [isLoad,     setLoad]     = useState(false)
-  const [totalRows,  setTotal]    = useState(0)
-  const [data,       setData]     = useState([])
-  const [activeIdx,  setActive]   = useState(0)   // 0-based card index in view
-  const [showModal,  setModal]    = useState(false)
+export default function App() {
+  const spRef      = useRef(null)
+  const trackRef   = useRef(null)
+  const loadingRef = useRef(false)
+  const pageRef    = useRef(1)
+
+  const [isLoad,    setLoad]    = useState(false)
+  const [totalRows, setTotal]   = useState(0)
+  const [data,      setData]    = useState([])
+  const [activeIdx, setActive]  = useState(0)
+  const [showModal, setModal]   = useState(false)
+  const [appReady,  setAppReady] = useState(false)   // controls loader visibility
+  const [fadeOut,   setFadeOut]  = useState(false)   // triggers fade-out animation
 
   /* ── fetch ─────────────────────────────────── */
   const fetchAnnouncements = useCallback(async (page = 1) => {
@@ -106,7 +131,17 @@ export default function App() {
     }
   }, [])
 
-  useEffect(() => { fetchAnnouncements(1) }, [fetchAnnouncements])
+  /* ── on mount: fetch then dismiss loader ────── */
+  useEffect(() => {
+    const init = async () => {
+      await fetchAnnouncements(1)
+      // small minimum so the animation is always seen
+      await new Promise(r => setTimeout(r, 2000))
+      setFadeOut(true)
+      setTimeout(() => setAppReady(true), 700) // matches fade-out duration
+    }
+    init()
+  }, [fetchAnnouncements])
 
   /* ── track scroll position for dots / arrow state ── */
   useEffect(() => {
@@ -115,7 +150,7 @@ export default function App() {
 
     const onScroll = () => {
       const cardW = el.firstChild?.offsetWidth ?? 1
-      const idx   = Math.round(el.scrollLeft / (cardW + 20)) // 20 = gap
+      const idx   = Math.round(el.scrollLeft / (cardW + 20))
       setActive(idx)
     }
 
@@ -132,12 +167,15 @@ export default function App() {
     setActive(idx)
   }
 
-  const totalCards = data.length + (data.length > 0 ? 1 : 0) // cards + load-more/all-done
+  const totalCards = data.length + (data.length > 0 ? 1 : 0)
   const atStart    = activeIdx === 0
   const atEnd      = activeIdx >= totalCards - 1
 
   return (
     <>
+      {/* ── LOADING SCREEN ── shown until appReady */}
+      {!appReady && <LoadingScreen fadeOut={fadeOut} />}
+
       <main>
         <div id="content">
           <div className="page-scroll">
@@ -207,7 +245,6 @@ export default function App() {
               </div>
 
               <div className="carousel-wrapper">
-                {/* Track */}
                 <div className="carousel-track-wrap">
                   <div ref={trackRef} className="annn">
                     {isLoad && data.length === 0 ? (
@@ -230,7 +267,6 @@ export default function App() {
                           />
                         ))}
 
-                        {/* Load more / all done */}
                         <div className="load-more-card">
                           {totalRows === data.length ? (
                             <div className="all-done">
@@ -254,7 +290,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Footer: prev • dots • next */}
                 {data.length > 0 && (
                   <div className="carousel-footer">
                     <button
@@ -291,7 +326,7 @@ export default function App() {
               </div>
             </section>
 
-          </div>{/* page-scroll */}
+          </div>
         </div>
       </main>
 

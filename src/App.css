@@ -472,14 +472,6 @@ li { list-style: none; }
   color: rgba(255,255,255,0.3);
 }
 
-.card-heading {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #34d399;
-  margin-bottom: 0.8rem;
-  line-height: 1.4;
-}
-
 .card-field { margin-bottom: 1rem; }
 .card-field:last-child { margin-bottom: 0; }
 
@@ -689,6 +681,176 @@ li { list-style: none; }
   color: #34d399;
   transform: rotate(90deg);
 }
+
+/* ==========================================
+   LOADING SCREEN
+   ========================================== */
+@keyframes ring-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes ring-spin-rev {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(-360deg); }
+}
+
+@keyframes ring-pulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50%       { opacity: 1;   transform: scale(1.04); }
+}
+
+@keyframes loader-fade-out {
+  0%   { opacity: 1; transform: scale(1); }
+  80%  { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.04); }
+}
+
+@keyframes loader-logo-in {
+  from { opacity: 0; transform: scale(0.7); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes loader-text-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 0.5; transform: translateY(0); }
+}
+
+@keyframes dot-bounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.3; }
+  40%           { transform: translateY(-6px); opacity: 1; }
+}
+
+.loader-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #080f1e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 2rem;
+  pointer-events: all;
+}
+
+.loader-screen.fade-out {
+  animation: loader-fade-out 0.7s ease forwards;
+  pointer-events: none;
+}
+
+.loader-rings {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Decorative grid inside loader */
+.loader-rings::before {
+  content: '';
+  position: absolute;
+  inset: -40px;
+  background-image:
+    linear-gradient(rgba(52,211,153,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(52,211,153,0.04) 1px, transparent 1px);
+  background-size: 30px 30px;
+  mask-image: radial-gradient(circle, black 40%, transparent 75%);
+  pointer-events: none;
+}
+
+.l-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px solid transparent;
+}
+
+.l-ring-1 {
+  width: 160px;
+  height: 160px;
+  border-top-color: #34d399;
+  border-right-color: rgba(52,211,153,0.2);
+  border-bottom-color: transparent;
+  border-left-color: rgba(52,211,153,0.1);
+  animation: ring-spin 1.4s linear infinite;
+}
+
+.l-ring-2 {
+  width: 130px;
+  height: 130px;
+  border-top-color: transparent;
+  border-right-color: rgba(52,211,153,0.6);
+  border-bottom-color: rgba(52,211,153,0.15);
+  border-left-color: transparent;
+  animation: ring-spin-rev 1.8s linear infinite;
+}
+
+.l-ring-3 {
+  width: 100px;
+  height: 100px;
+  border-top-color: rgba(52,211,153,0.3);
+  border-right-color: transparent;
+  border-bottom-color: #34d399;
+  border-left-color: rgba(52,211,153,0.1);
+  animation: ring-spin 2.2s linear infinite;
+}
+
+/* Static outer glow ring */
+.l-ring-glow {
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  border: 1px solid rgba(52,211,153,0.08);
+  animation: ring-pulse 2.5s ease-in-out infinite;
+}
+
+.loader-logo {
+  position: relative;
+  z-index: 2;
+  animation: loader-logo-in 0.6s ease both 0.2s;
+}
+
+.loader-logo img {
+  height: 3.5rem;
+  filter: drop-shadow(0 0 20px rgba(52,211,153,0.5));
+}
+
+.loader-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  animation: loader-text-in 0.5s ease both 0.4s;
+}
+
+.loader-label {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+}
+
+.loader-dots {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.loader-dots span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #34d399;
+  animation: dot-bounce 1.2s ease-in-out infinite;
+}
+
+.loader-dots span:nth-child(2) { animation-delay: 0.15s; }
+.loader-dots span:nth-child(3) { animation-delay: 0.3s; }
 
 /* ==========================================
    RESPONSIVE
