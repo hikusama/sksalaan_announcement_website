@@ -59,21 +59,23 @@ function App() {
     const to = from + pageSize - 1;
 
     try {
-      const { count: total } = await supabase
-        .from("announcement")
+      const { count: total, error: countError } = await supabase
+        .from("announcements")
         .select("*", { count: "exact", head: true });
 
+      if (countError) throw new Error(`Count query failed: ${countError.message}`);
+
       const { data: fetchedData, error } = await supabase
-        .from("announcement")
+        .from("announcements")
         .select("*")
         .order("created_at", { ascending: false })
         .range(from, to);
 
-      if (error) throw error;
+      if (error) throw new Error(`Data query failed: ${error.message}`);
 
       return { data: fetchedData || [], total: total || 0 };
     } catch (err) {
-      console.error(err);
+      console.error("Fetch announcements error:", err.message);
       return { data: [], total: 0 };
     } finally {
       loadingRef.current = false;
