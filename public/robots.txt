@@ -1,0 +1,13 @@
+# Allow all search engines to crawl the site
+User-agent: *
+Allow: /
+
+# Disallow admin/private areas (if any)
+Disallow: /admin/
+Disallow: /private/
+
+# Specify sitemap location
+Sitemap: https://sksalaan.example.com/sitemap.xml
+
+# Crawl delay (optional - adjust as needed)
+Crawl-delay: 1

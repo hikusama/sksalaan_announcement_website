@@ -21,43 +21,48 @@ function AnnouncementCard({ card, style }) {
   }
 
   return (
-    <article className="ann-card" style={style}>
+    <article className="ann-card" style={style} itemScope itemType="https://schema.org/NewsArticle">
       <div className="card-top">
-        <img src={logo} alt="SK Logo" className="card-logo" />
+        <img src={logo} alt="SK Youth Logo" className="card-logo" itemProp="image" />
         <div className="card-date">
-          <div className="date-val">{formatDate(card.created_at)}</div>
+          <div className="date-val" itemProp="datePublished">{formatDate(card.created_at)}</div>
           <div className="date-label">Posted</div>
         </div>
       </div>
 
+      <h3 className="card-heading" itemProp="headline">{card.what}</h3>
+
       <div className="card-field">
         <div className="field-label">What</div>
-        <div className="field-value">{card.what}</div>
+        <div className="field-value" itemProp="description">{card.what}</div>
       </div>
 
       <div className="card-field">
         <div className="field-label">When</div>
-        <div className="field-value">{formatDateTime(card.when)}</div>
+        <div className="field-value" itemProp="dateModified">{formatDateTime(card.when)}</div>
       </div>
 
       <div className="card-field">
         <div className="field-label">Where</div>
-        <div className="field-value">{card.where}</div>
+        <div className="field-value" itemProp="locationCreated">{card.where}</div>
       </div>
 
       <hr className="card-divider" />
 
       <div className="card-field">
         <div className="field-label">Who</div>
-        <div className="field-value">{card.who}</div>
+        <div className="field-value" itemProp="author">{card.who}</div>
       </div>
 
       <hr className="card-divider" />
 
       <div className="card-field">
         <div className="field-label">Description</div>
-        <div className="field-value">{card.description}</div>
+        <div className="field-value" itemProp="articleBody">{card.description}</div>
       </div>
+      
+      <meta itemProp="publisher" content="SKYouth Salaan" />
+      <meta itemProp="url" content={`https://sksalaan-announcement-website.vercel.app/announcements/${card.id}`} />
     </article>
   )
 }

@@ -472,6 +472,14 @@ li { list-style: none; }
   color: rgba(255,255,255,0.3);
 }
 
+.card-heading {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #34d399;
+  margin-bottom: 0.8rem;
+  line-height: 1.4;
+}
+
 .card-field { margin-bottom: 1rem; }
 .card-field:last-child { margin-bottom: 0; }
 
