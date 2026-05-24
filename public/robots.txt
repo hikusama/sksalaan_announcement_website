@@ -7,7 +7,7 @@ Disallow: /admin/
 Disallow: /private/
 
 # Specify sitemap location
-Sitemap: https://sksalaan.example.com/sitemap.xml
+Sitemap: https://sksalaan-announcement-website.vercel.app/sitemap.xml
 
 # Crawl delay (optional - adjust as needed)
 Crawl-delay: 1
